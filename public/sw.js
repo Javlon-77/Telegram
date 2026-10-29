@@ -4,7 +4,7 @@ const CACHE_NAME = 'telecrypt-v1';
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/']);
+      return cache.addAll([self.registration.scope]);
     }).then(() => self.skipWaiting())
   );
 });
@@ -42,8 +42,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/manifest-icon.png',
-      badge: '/manifest-icon.png',
+      icon: `${self.registration.scope}manifest-icon.png`,
+      badge: `${self.registration.scope}manifest-icon.png`,
     })
   );
 });
