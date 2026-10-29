@@ -1,0 +1,124 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with public keys for end-to-end encryption",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "username": { "type": "string", "pattern": "^[a-zA-Z0-9_]{3,30}$", "maxLength": 30 },
+        "bio": { "type": "string", "maxLength": 200 },
+        "publicKey": { "type": "string", "maxLength": 1024, "description": "Exported ECDH or RSA public key for E2EE" },
+        "status": { "type": "string", "enum": ["online", "offline", "away"] },
+        "lastSeen": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "Chat session (1-on-1 direct conversation or group chat)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["direct", "group"] },
+        "name": { "type": "string", "maxLength": 100 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "creatorId": { "type": "string", "maxLength": 128 },
+        "participantIds": { "type": "array", "description": "List of user UIDs participating in chat" },
+        "lastMessageSnippet": { "type": "string", "maxLength": 300 },
+        "lastMessageTimestamp": { "type": "string", "format": "date-time" },
+        "isE2EE": { "type": "boolean" },
+        "selfDestructTimer": { "type": "number", "description": "Default self destruct timer in seconds, 0 = off" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "creatorId", "participantIds"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Encrypted or plaintext message with self-destruct countdown support",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "chatId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "senderPhoto": { "type": "string", "maxLength": 500 },
+        "text": { "type": "string", "maxLength": 5000 },
+        "ciphertext": { "type": "string", "maxLength": 10000 },
+        "iv": { "type": "string", "maxLength": 128 },
+        "isEncrypted": { "type": "boolean" },
+        "mediaType": { "type": "string", "enum": ["text", "image", "audio", "file"] },
+        "fileUrl": { "type": "string", "maxLength": 100000 },
+        "fileName": { "type": "string", "maxLength": 255 },
+        "fileSize": { "type": "number" },
+        "replyToId": { "type": "string", "maxLength": 128 },
+        "replyToSnippet": { "type": "string", "maxLength": 200 },
+        "selfDestructDuration": { "type": "number" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "reactions": { "type": "object" },
+        "readBy": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "chatId", "senderId"]
+    },
+    "Call": {
+      "title": "Call",
+      "description": "WebRTC voice or video call signaling session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "chatId": { "type": "string", "maxLength": 128 },
+        "callerId": { "type": "string", "maxLength": 128 },
+        "callerName": { "type": "string", "maxLength": 100 },
+        "callerPhoto": { "type": "string", "maxLength": 500 },
+        "receiverId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["audio", "video"] },
+        "status": { "type": "string", "enum": ["calling", "active", "ended", "declined"] },
+        "offer": { "type": "object" },
+        "answer": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "callerId", "type", "status"]
+    },
+    "IceCandidate": {
+      "title": "IceCandidate",
+      "description": "WebRTC ICE candidate for peer connection exchange",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "candidate": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "senderId", "candidate"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile with E2EE public keys and status"
+    },
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Chat conversations (1-on-1 or groups)"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Chat messages with encryption payload and self-destruct metadata"
+    },
+    "/calls/{callId}": {
+      "schema": "Call",
+      "description": "Voice and video call signaling sessions"
+    },
+    "/calls/{callId}/candidates/{candidateId}": {
+      "schema": "IceCandidate",
+      "description": "ICE candidates exchanged during audio/video calls"
+    }
+  }
+}

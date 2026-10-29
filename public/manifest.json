@@ -1,0 +1,21 @@
+{
+  "short_name": "TeleCrypt",
+  "name": "TeleCrypt - Secure E2EE Messenger",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/identicon/svg?seed=telecrypt_pwa_192",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://api.dicebear.com/7.x/identicon/svg?seed=telecrypt_pwa_512",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0e1621",
+  "theme_color": "#17212b",
+  "display": "standalone",
+  "orientation": "portrait"
+}

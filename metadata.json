@@ -1,0 +1,9 @@
+{
+  "name": "TeleCrypt - Secure Messenger",
+  "description": "End-to-end encrypted real-time messaging, group chats, self-destructing timer messages, voice/video calling, and cross-device sync.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

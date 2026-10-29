@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId
+        && incoming().uid == request.auth.uid
+        && incoming().displayName is string && incoming().displayName.size() <= 100
+        && incoming().email is string && incoming().email.size() <= 128;
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId
+        && incoming().uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // CHATS COLLECTION
+    match /chats/{chatId} {
+      allow get: if isSignedIn() && isValidId(chatId)
+        && (resource.data.participantIds.hasAny([request.auth.uid]));
+      allow list: if isSignedIn()
+        && (resource.data.participantIds.hasAny([request.auth.uid]));
+      allow create: if isSignedIn() && isValidId(chatId)
+        && incoming().creatorId == request.auth.uid
+        && incoming().participantIds.hasAny([request.auth.uid]);
+      allow update: if isSignedIn() && isValidId(chatId)
+        && (existing().participantIds.hasAny([request.auth.uid]) || incoming().participantIds.hasAny([request.auth.uid]));
+      allow delete: if isSignedIn() && isValidId(chatId)
+        && existing().creatorId == request.auth.uid;
+
+      // MESSAGES SUBCOLLECTION
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn() && isValidId(messageId);
+        allow create: if isSignedIn() && isValidId(messageId)
+          && incoming().senderId == request.auth.uid;
+        allow update: if isSignedIn() && isValidId(messageId);
+        allow delete: if isSignedIn() && isValidId(messageId)
+          && (existing().senderId == request.auth.uid || request.auth != null);
+      }
+    }
+
+    // CALLS COLLECTION (WebRTC Signaling)
+    match /calls/{callId} {
+      allow get, list: if isSignedIn() && isValidId(callId)
+        && (resource.data.callerId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(callId)
+        && incoming().callerId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(callId)
+        && (existing().callerId == request.auth.uid || existing().receiverId == request.auth.uid);
+      allow delete: if isSignedIn() && isValidId(callId)
+        && existing().callerId == request.auth.uid;
+
+      match /candidates/{candidateId} {
+        allow get, list: if isSignedIn() && isValidId(candidateId);
+        allow create: if isSignedIn() && isValidId(candidateId)
+          && incoming().senderId == request.auth.uid;
+        allow update, delete: if isSignedIn() && isValidId(candidateId);
+      }
+    }
+  }
+}
